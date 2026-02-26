@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Root Finding Solver</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Numerical Root Finder</h1>
+      <div class="formatGuide">
+        <h3>Function Format Guide</h3>
+        <table>
+          <tr>
+            <th>Mathematical</th>
+            <th>JavaScript Format</th>
+          </tr>
+          <tr>
+            <td>x²</td>
+            <td>x*x or x**2</td>
+          </tr>
+          <tr>
+            <td>x³</td>
+            <td>x*x*x or x**3</td>
+          </tr>
+          <tr>
+            <td>sin(x)</td>
+            <td>Math.sin(x)</td>
+          </tr>
+          <tr>
+            <td>cos(x)</td>
+            <td>Math.cos(x)</td>
+          </tr>
+          <tr>
+            <td>tan(x)</td>
+            <td>Math.tan(x)</td>
+          </tr>
+          <tr>
+            <td>e^x</td>
+            <td>Math.exp(x)</td>
+          </tr>
+          <tr>
+            <td>ln(x)</td>
+            <td>Math.log(x)</td>
+          </tr>
+          <tr>
+            <td>|x|</td>
+            <td>Math.abs(x)</td>
+          </tr>
+          <tr>
+            <td>√x</td>
+            <td>Math.sqrt(x)</td>
+          </tr>
+        </table>
+      </div>
+
+      <label>Function (JavaScript format):</label>
+      <input type="text" id="functionInput" placeholder="Example: x*x - 4" />
+
+      <label>Method:</label>
+      <select id="methodSelect">
+        <option value="bisection">Bisection</option>
+        <option value="falsePosition">False Position</option>
+        <option value="newton">Newton-Raphson</option>
+        <option value="secant">Secant</option>
+        <option value="fixed">Fixed Point</option>
+      </select>
+
+      <label>First Value (a or x₀):</label>
+      <input type="number" id="valueA" />
+
+      <label>Second Value (b if needed):</label>
+      <input type="number" id="valueB" />
+
+      <label>Tolerance:</label>
+      <input type="number" id="tolerance" value="0.0001" />
+
+      <label>Max Iterations:</label>
+      <input type="number" id="maxIter" value="100" />
+
+      <button onclick="solve()">Solve</button>
+
+      <div id="resultBox"></div>
+      <h3>Iteration Table</h3>
+      <table id="iterationTable">
+        <thead>
+          <tr>
+            <th>Iter</th>
+            <th>x</th>
+            <th>f(x)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h3>Function Graph</h3>
+      <canvas id="functionChart"></canvas>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
