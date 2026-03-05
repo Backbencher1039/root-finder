@@ -9,53 +9,24 @@ function solve() {
   let tableBody = document.querySelector("#iterationTable tbody");
   tableBody.innerHTML = "";
 
-  let f = new Function("x", "return " + f_str);
-
   let iterations = [];
   let root;
 
   try {
     if (method === "bisection") {
-      if (f(a) * f(b) > 0) throw "Invalid interval";
-
-      for (let i = 0; i < maxIter; i++) {
-        let c = (a + b) / 2;
-        iterations.push({ iter: i + 1, x: c, fx: f(c) });
-
-        if (Math.abs(f(c)) < tol) {
-          root = c;
-          break;
-        }
-
-        if (f(a) * f(c) < 0) b = c;
-        else a = c;
-
-        root = c;
-      }
+      root = bisection(f_str, a, b, tol, maxIter, iterations);
+    } else if (method === "falsePosition") {
+      root = falsePosition(f_str, a, b, tol, maxIter, iterations);
     } else if (method === "newton") {
-      let x0 = a;
-      let h = 0.00001;
-
-      for (let i = 0; i < maxIter; i++) {
-        let df = (f(x0 + h) - f(x0 - h)) / (2 * h);
-        if (df === 0) throw "Derivative zero";
-
-        let x1 = x0 - f(x0) / df;
-
-        iterations.push({ iter: i + 1, x: x1, fx: f(x1) });
-
-        if (Math.abs(x1 - x0) < tol) {
-          root = x1;
-          break;
-        }
-
-        x0 = x1;
-        root = x1;
-      }
+      root = newtonRaphson(f_str, a, tol, maxIter, iterations);
+    } else if (method === "secant") {
+      root = secant(f_str, a, b, tol, maxIter, iterations);
+    } else if (method === "fixed") {
+      root = fixedPoint(f_str, a, tol, maxIter, iterations);
     }
 
     displayTable(iterations);
-    plotGraph(f, root);
+    plotGraph(new Function("x", "return " + f_str), root);
 
     document.getElementById("resultBox").innerHTML =
       "<strong>Root ≈ </strong>" + root;
@@ -64,26 +35,10 @@ function solve() {
       "<strong>Error:</strong> " + error;
   }
 }
-let result;
-
-try {
-  if (method === "bisection") result = bisection(f_str, a, b, tol, maxIter);
-  else if (method === "falsePosition")
-    result = falsePosition(f_str, a, b, tol, maxIter);
-  else if (method === "newton") result = newtonRaphson(f_str, a, tol, maxIter);
-  else if (method === "secant") result = secant(f_str, a, b, tol, maxIter);
-  else if (method === "fixed") result = fixedPoint(f_str, a, tol, maxIter);
-
-  document.getElementById("resultBox").innerHTML =
-    "<strong>Root ≈ </strong>" + result;
-} catch (error) {
-  document.getElementById("resultBox").innerHTML =
-    "<strong>Error:</strong> " + error;
-}
 
 /* ---------------- METHODS ---------------- */
 
-function bisection(f_str, a, b, tol, maxIter) {
+function bisection(f_str, a, b, tol, maxIter, iterations) {
   let f = new Function("x", "return " + f_str);
 
   if (f(a) * f(b) > 0) throw "Invalid interval.";
@@ -93,6 +48,8 @@ function bisection(f_str, a, b, tol, maxIter) {
   for (let i = 0; i < maxIter; i++) {
     c = (a + b) / 2;
 
+    iterations.push({ iter: i + 1, x: c, fx: f(c) });
+
     if (Math.abs(f(c)) < tol) return c;
 
     if (f(a) * f(c) < 0) b = c;
@@ -102,7 +59,7 @@ function bisection(f_str, a, b, tol, maxIter) {
   return c;
 }
 
-function falsePosition(f_str, a, b, tol, maxIter) {
+function falsePosition(f_str, a, b, tol, maxIter, iterations) {
   let f = new Function("x", "return " + f_str);
 
   if (f(a) * f(b) > 0) throw "Invalid interval.";
@@ -112,6 +69,8 @@ function falsePosition(f_str, a, b, tol, maxIter) {
   for (let i = 0; i < maxIter; i++) {
     c = (a * f(b) - b * f(a)) / (f(b) - f(a));
 
+    iterations.push({ iter: i + 1, x: c, fx: f(c) });
+
     if (Math.abs(f(c)) < tol) return c;
 
     if (f(a) * f(c) < 0) b = c;
@@ -121,22 +80,20 @@ function falsePosition(f_str, a, b, tol, maxIter) {
   return c;
 }
 
-function newtonRaphson(f_str, x0, tol, maxIter) {
+function newtonRaphson(f_str, x0, tol, maxIter, iterations) {
   let f = new Function("x", "return " + f_str);
 
-  function derivative(x) {
-    let h = 0.00001;
-    return (f(x + h) - f(x - h)) / (2 * h);
-  }
-
+  let h = 0.00001;
   let x1;
 
   for (let i = 0; i < maxIter; i++) {
-    let df = derivative(x0);
+    let df = (f(x0 + h) - f(x0 - h)) / (2 * h);
 
     if (df === 0) throw "Derivative became zero.";
 
     x1 = x0 - f(x0) / df;
+
+    iterations.push({ iter: i + 1, x: x1, fx: f(x1) });
 
     if (Math.abs(x1 - x0) < tol) return x1;
 
@@ -146,7 +103,7 @@ function newtonRaphson(f_str, x0, tol, maxIter) {
   return x1;
 }
 
-function secant(f_str, x0, x1, tol, maxIter) {
+function secant(f_str, x0, x1, tol, maxIter, iterations) {
   let f = new Function("x", "return " + f_str);
 
   let x2;
@@ -158,6 +115,8 @@ function secant(f_str, x0, x1, tol, maxIter) {
 
     x2 = x1 - (f(x1) * (x1 - x0)) / denominator;
 
+    iterations.push({ iter: i + 1, x: x2, fx: f(x2) });
+
     if (Math.abs(x2 - x1) < tol) return x2;
 
     x0 = x1;
@@ -167,13 +126,15 @@ function secant(f_str, x0, x1, tol, maxIter) {
   return x2;
 }
 
-function fixedPoint(g_str, x0, tol, maxIter) {
+function fixedPoint(g_str, x0, tol, maxIter, iterations) {
   let g = new Function("x", "return " + g_str);
 
   let x1;
 
   for (let i = 0; i < maxIter; i++) {
     x1 = g(x0);
+
+    iterations.push({ iter: i + 1, x: x1, fx: g(x1) });
 
     if (Math.abs(x1 - x0) < tol) return x1;
 
@@ -182,6 +143,9 @@ function fixedPoint(g_str, x0, tol, maxIter) {
 
   return x1;
 }
+
+/* ---------------- TABLE ---------------- */
+
 function displayTable(iterations) {
   let tableBody = document.querySelector("#iterationTable tbody");
 
@@ -189,14 +153,17 @@ function displayTable(iterations) {
     let tr = document.createElement("tr");
 
     tr.innerHTML = `
-            <td>${row.iter}</td>
-            <td>${row.x.toFixed(6)}</td>
-            <td>${row.fx.toFixed(6)}</td>
-        `;
+      <td>${row.iter}</td>
+      <td>${row.x.toFixed(6)}</td>
+      <td>${row.fx.toFixed(6)}</td>
+    `;
 
     tableBody.appendChild(tr);
   });
 }
+
+/* ---------------- GRAPH ---------------- */
+
 let chart;
 
 function plotGraph(f, root) {
@@ -214,6 +181,7 @@ function plotGraph(f, root) {
 
   chart = new Chart(ctx, {
     type: "line",
+
     data: {
       labels: xValues,
       datasets: [
@@ -225,6 +193,7 @@ function plotGraph(f, root) {
         },
       ],
     },
+
     options: {
       responsive: true,
       scales: {
